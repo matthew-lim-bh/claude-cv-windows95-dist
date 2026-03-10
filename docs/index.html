@@ -1,11 +1,27 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-HG2PY0RKCW"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      const isDebug = location.hostname === 'localhost' && new URLSearchParams(location.search).has('debug');
+
+      gtag('config', 'G-HG2PY0RKCW');
+
+      if (isDebug)
+      {
+        gtag('config', 'G-HG2PY0RKCW', {debug_mode: true});
+      }
+    </script>
+
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="./icon3.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Matthew Lim -- CV</title>
-    <script type="module" crossorigin src="./assets/index-C-t-XWhA.js"></script>
+    <script type="module" crossorigin src="./assets/index-Cv1UtIrF.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/index-Cv_u4a3N.css">
   </head>
   <body>
