@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 130" width="100" height="130">
+  <defs>
+    <filter id="roughen">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="4" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="0.6" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <clipPath id="docClip">
+      <path d="M 8,5 L 78,5 L 78,20 L 92,20 L 92,125 L 8,125 Z"/>
+    </clipPath>
+  </defs>
+
+  <!-- Document body -->
+  <path d="M 8,5 L 78,4.8 L 78.3,9 L 92,9.3 L 92.2,125 L 7.8,125.2 Z"
+        fill="none" stroke="#1e1e1e" stroke-width="2.2"
+        stroke-linejoin="round" filter="url(#roughen)"/>
+
+  <!-- Folded corner (top right) -->
+  <path d="M 78,4.8 L 78.3,19 L 92,19.3 L 92,9.3 Z"
+        fill="none" stroke="#1e1e1e" stroke-width="1.8"
+        stroke-linejoin="round" filter="url(#roughen)"/>
+  <path d="M 78.2,5 L 92,9.3" stroke="#1e1e1e" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+
+  <!-- ===== HEAD (top ~38%) ===== -->
+
+  <!-- Face circle -->
+  <circle cx="50" cy="34" r="20" fill="none" stroke="#1e1e1e" stroke-width="2.2"
+          filter="url(#roughen)"/>
+
+  <!-- Hair -->
+  <path d="M 31,28 Q 36,14 50,16 Q 64,14 69,28"
+        stroke="#1e1e1e" stroke-width="2.2" fill="none" stroke-linecap="round" filter="url(#roughen)"/>
+  <path d="M 34,21 Q 35,12 39,17" stroke="#1e1e1e" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M 50,16 Q 51,7 54,13"  stroke="#1e1e1e" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M 63,19 Q 66,11 68,18" stroke="#1e1e1e" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+
+  <!-- Left eye -->
+  <ellipse cx="42" cy="33" rx="3.2" ry="2.6" fill="#1e1e1e" filter="url(#roughen)"/>
+  <!-- Right eye -->
+  <ellipse cx="58" cy="33" rx="3.2" ry="2.6" fill="#1e1e1e" filter="url(#roughen)"/>
+
+  <!-- Eyebrows -->
+  <path d="M 38,27.5 Q 42,26 46,27.5" stroke="#1e1e1e" stroke-width="1.8" fill="none" stroke-linecap="round" filter="url(#roughen)"/>
+  <path d="M 54,27.5 Q 58,26 62,27.5" stroke="#1e1e1e" stroke-width="1.8" fill="none" stroke-linecap="round" filter="url(#roughen)"/>
+
+  <!-- Nose -->
+  <path d="M 50,35 Q 47.5,40 50,41.5 Q 52.5,40 50,35"
+        stroke="#1e1e1e" stroke-width="1.4" fill="none" stroke-linecap="round" filter="url(#roughen)"/>
+
+  <!-- Smile -->
+  <path d="M 43,45 Q 50,51.5 57,45"
+        stroke="#1e1e1e" stroke-width="2" fill="none" stroke-linecap="round" filter="url(#roughen)"/>
+
+  <!-- Ears -->
+  <path d="M 30.2,32 Q 27,35 30,40" stroke="#1e1e1e" stroke-width="1.6" fill="none" stroke-linecap="round" filter="url(#roughen)"/>
+  <path d="M 69.8,32 Q 73,35 70,40" stroke="#1e1e1e" stroke-width="1.6" fill="none" stroke-linecap="round" filter="url(#roughen)"/>
+
+  <!-- ===== BIG CV (middle ~50%) ===== -->
+  <g clip-path="url(#docClip)">
+    <!-- C -->
+    <path d="M 48,62 Q 22,57 22,79 Q 22,101 48,96"
+          stroke="#1e1e1e" stroke-width="7" fill="none"
+          stroke-linecap="round" stroke-linejoin="round" filter="url(#roughen)"/>
+    <!-- V -->
+    <path d="M 54,60 L 68,100 L 82,60"
+          stroke="#1e1e1e" stroke-width="7" fill="none"
+          stroke-linecap="round" stroke-linejoin="round" filter="url(#roughen)"/>
+  </g>
+
+  <!-- ===== TEXT LINES (bottom ~12%) ===== -->
+  <path d="M 14,109 Q 40,108.5 86,109"   stroke="#1e1e1e" stroke-width="2" fill="none" stroke-linecap="round" filter="url(#roughen)"/>
+  <path d="M 14,116 Q 45,115.5 80,116"   stroke="#1e1e1e" stroke-width="2" fill="none" stroke-linecap="round" filter="url(#roughen)"/>
+  <path d="M 14,122.5 Q 36,122 62,122.5" stroke="#1e1e1e" stroke-width="2" fill="none" stroke-linecap="round" filter="url(#roughen)"/>
+
+</svg>

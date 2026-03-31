@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 118" width="100" height="118">
+  <defs>
+    <filter id="roughen">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="4" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="0.6" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+
+  <!-- Tail: thick, curls sideways from body (well below whisker level) -->
+  <path d="M 70,82 Q 94,84 92,100 Q 90,114 65,111"
+        stroke="#1e1e1e" stroke-width="5" fill="none" stroke-linecap="round" filter="url(#roughen)"/>
+
+  <!-- Body: arc only below the head circle intersection (~y=63, x=35–65) -->
+  <path d="M 35,63 A 24,19 0 1,0 65,63"
+        fill="none" stroke="#1e1e1e" stroke-width="2.2" stroke-linecap="round" filter="url(#roughen)"/>
+
+  <!-- Front paws -->
+  <ellipse cx="39" cy="96" rx="9" ry="5"
+           fill="none" stroke="#1e1e1e" stroke-width="2" filter="url(#roughen)"/>
+  <ellipse cx="61" cy="96" rx="9" ry="5"
+           fill="none" stroke="#1e1e1e" stroke-width="2" filter="url(#roughen)"/>
+  <!-- Toe lines left paw -->
+  <path d="M 34,92 L 34,99" stroke="#1e1e1e" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+  <path d="M 39,91 L 39,99" stroke="#1e1e1e" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+  <path d="M 44,92 L 44,99" stroke="#1e1e1e" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+  <!-- Toe lines right paw -->
+  <path d="M 56,92 L 56,99" stroke="#1e1e1e" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+  <path d="M 61,91 L 61,99" stroke="#1e1e1e" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+  <path d="M 66,92 L 66,99" stroke="#1e1e1e" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+
+  <!-- Head (chibi: big, merges directly into body) -->
+  <circle cx="50" cy="37" r="30"
+          fill="none" stroke="#1e1e1e" stroke-width="2.2" filter="url(#roughen)"/>
+
+  <!-- Left ear: outer + inner hole via evenodd -->
+  <path d="M 23,22 L 15,2 L 40,15 Z  M 26,19 L 20,8 L 37,16 Z"
+        fill="#1e1e1e" fill-rule="evenodd" filter="url(#roughen)"/>
+  <!-- Right ear -->
+  <path d="M 77,22 L 85,2 L 60,15 Z  M 74,19 L 80,8 L 63,16 Z"
+        fill="#1e1e1e" fill-rule="evenodd" filter="url(#roughen)"/>
+
+  <!-- Eyes: big solid ellipses (chibi) -->
+  <ellipse cx="40" cy="37" rx="5" ry="4.5" fill="#1e1e1e" filter="url(#roughen)"/>
+  <ellipse cx="60" cy="37" rx="5" ry="4.5" fill="#1e1e1e" filter="url(#roughen)"/>
+
+  <!-- Nose: small inverted triangle -->
+  <path d="M 47.5,47 L 50,51 L 52.5,47 Z" fill="#1e1e1e" filter="url(#roughen)"/>
+
+  <!-- Mouth -->
+  <path d="M 50,51 Q 47,55 44,53" stroke="#1e1e1e" stroke-width="1.6" fill="none" stroke-linecap="round" filter="url(#roughen)"/>
+  <path d="M 50,51 Q 53,55 56,53" stroke="#1e1e1e" stroke-width="1.6" fill="none" stroke-linecap="round" filter="url(#roughen)"/>
+
+  <!-- Whiskers left -->
+  <path d="M 43,47 L 12,42" stroke="#1e1e1e" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+  <path d="M 43,50 L 12,50" stroke="#1e1e1e" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+  <path d="M 43,53 L 13,58" stroke="#1e1e1e" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+  <!-- Whiskers right -->
+  <path d="M 57,47 L 88,42" stroke="#1e1e1e" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+  <path d="M 57,50 L 88,50" stroke="#1e1e1e" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+  <path d="M 57,53 L 87,58" stroke="#1e1e1e" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+
+</svg>

@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cat Paw Game</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #1a1a2e;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      color: white;
+      user-select: none;
+      overflow: hidden;
+    }
+    #controls {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    button {
+      padding: 8px 16px;
+      border: 2px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      transition: all 0.15s;
+    }
+    button:hover { background: rgba(255,255,255,0.25); }
+    button.active { background: #e94560; border-color: #ff6b80; }
+    #ui {
+      display: flex;
+      gap: 24px;
+      padding: 8px 20px;
+      background: rgba(0,0,0,0.4);
+      border-radius: 10px;
+      margin-bottom: 8px;
+      font-size: 15px;
+    }
+    #ui b { color: #ffd700; }
+    #game-canvas {
+      cursor: none;
+      border-radius: 12px;
+      box-shadow: 0 0 40px rgba(0,0,0,0.6);
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <button id="btn-mode1" class="active" onclick="setMode(1)">🐾 Paw Mode</button>
+    <button id="btn-mode2" onclick="setMode(2)">🔴 Laser Mode</button>
+    <button id="btn-timed" onclick="toggleTimed()">⏱ Timed (60s)</button>
+    <button id="btn-start" onclick="startGame()">▶ Start</button>
+  </div>
+  <div id="ui">
+    <span>Score: <b id="score-display">0</b></span>
+    <span>Time: <b id="time-display">--</b></span>
+    <span>Best: <b id="high-score-display">0</b></span>
+  </div>
+  <canvas id="game-canvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById('game-canvas');
+    const ctx = canvas.getContext('2d');
+
+    const W = Math.min(window.innerWidth - 20, 820);
+    const H = Math.min(window.innerHeight - 130, 580);
+    canvas.width = W;
+    canvas.height = H;
+
+    // --- State ---
+    let mode = 1;
+    let timedMode = false;
+    let gameRunning = false;
+    let score = 0;
+    let highScore = 0;
+    let timeLeft = 60;
+    let timerInterval = null;
+
+    // Paw
+    let pawX = W / 2, pawY = H / 2;
+    let isPawing = false;
+    let pawScale = 1;
+    let isTouch = false;
+    let touchSwingAngle = 0;
+    let shadowX = pawX - 15, shadowY = pawY - 15;
+
+    // Laser (mode 2)
+    let laserX = W / 2, laserY = H / 2;
+    let catPawActive = false;
+    let catPawX = 0, catPawY = 0;
+    let catPawTimer = 0;
+    let catPawInterval = 3000;
+
+    // --- Creature definitions ---
+    const TYPES = [
+      { type: 'fly',    emoji: '🪰', speed: 3.5, score: 50, size: 22, behavior: 'random_fast',  dirRate: 0.06 },
+      { type: 'moth',   emoji: '🦋', speed: 1.5, score: 30, size: 26, behavior: 'slow_stop',    dirRate: 0.02, stopChance: 0.006 },
+      { type: 'lizard', emoji: '🦎', speed: 0,   score: 20, size: 28, behavior: 'stationary' },
+      { type: 'mouse',  emoji: '🐭', speed: 2.8, score: 40, size: 24, behavior: 'flee' },
+    ];
+
+    let creatures = [];
+    let particles = [];
+
+    function spawnCreature() {
+      const def = TYPES[Math.floor(Math.random() * TYPES.length)];
+      const margin = 50;
+      const angle = Math.random() * Math.PI * 2;
+      creatures.push({
+        ...def,
+        x: margin + Math.random() * (W - margin * 2),
+        y: margin + Math.random() * (H - margin * 2),
+        vx: Math.cos(angle) * def.speed,
+        vy: Math.sin(angle) * def.speed,
+        stopped: false,
+        stopTimer: 0,
+        alive: true,
+        opacity: 1,
+        hitTimer: 0,
+      });
+    }
+
+    function spawnParticles(x, y, color) {
+      for (let i = 0; i < 8; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 1 + Math.random() * 3;
+        particles.push({
+          x, y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          life: 30,
+          maxLife: 30,
+          color,
+          size: 4 + Math.random() * 4,
+        });
+      }
+    }
+
+    // --- Game control ---
+    function startGame() {
+      gameRunning = true;
+      score = 0;
+      creatures = [];
+      particles = [];
+      timeLeft = 60;
+      clearInterval(timerInterval);
+
+      for (let i = 0; i < 6; i++) spawnCreature();
+
+      if (timedMode) {
+        timerInterval = setInterval(() => {
+          if (--timeLeft <= 0) { timeLeft = 0; endGame(); }
+        }, 1000);
+      }
+
+      document.getElementById('btn-start').textContent = '↺ Restart';
+      lastTime = 0;
+      requestAnimationFrame(gameLoop);
+    }
+
+    function endGame() {
+      gameRunning = false;
+      clearInterval(timerInterval);
+      if (score > highScore) highScore = score;
+
+      ctx.fillStyle = 'rgba(0,0,0,0.65)';
+      ctx.fillRect(0, 0, W, H);
+      ctx.textAlign = 'center';
+      ctx.fillStyle = 'white';
+      ctx.font = 'bold 44px Arial';
+      ctx.fillText('Game Over!', W / 2, H / 2 - 40);
+      ctx.font = '28px Arial';
+      ctx.fillText(`Score: ${score}`, W / 2, H / 2 + 8);
+      if (score >= highScore && score > 0) {
+        ctx.fillStyle = '#ffd700';
+        ctx.fillText('New High Score!', W / 2, H / 2 + 46);
+      }
+      ctx.fillStyle = 'rgba(255,255,255,0.6)';
+      ctx.font = '18px Arial';
+      ctx.fillText('Click Start to play again', W / 2, H / 2 + 84);
+      ctx.textAlign = 'left';
+    }
+
+    function setMode(m) {
+      mode = m;
+      document.getElementById('btn-mode1').classList.toggle('active', m === 1);
+      document.getElementById('btn-mode2').classList.toggle('active', m === 2);
+    }
+
+    function toggleTimed() {
+      timedMode = !timedMode;
+      document.getElementById('btn-timed').classList.toggle('active', timedMode);
+    }
+
+    // --- Input ---
+    canvas.addEventListener('mousemove', e => {
+      const r = canvas.getBoundingClientRect();
+      isTouch = false;
+      pawX = e.clientX - r.left;
+      pawY = e.clientY - r.top;
+      if (mode === 2) { laserX = pawX; laserY = pawY; }
+    });
+
+    canvas.addEventListener('click', e => {
+      if (!gameRunning) return;
+      const r = canvas.getBoundingClientRect();
+      doPaw(e.clientX - r.left, e.clientY - r.top);
+    });
+
+    canvas.addEventListener('touchstart', e => {
+      e.preventDefault();
+      isTouch = true;
+      const r = canvas.getBoundingClientRect();
+      const t = e.touches[0];
+      const tx = t.clientX - r.left;
+      const ty = t.clientY - r.top;
+      laserX = tx; laserY = ty;
+      if (gameRunning) doPaw(tx, ty);
+    }, { passive: false });
+
+    function doPaw(x, y) {
+      isPawing = true;
+      pawScale = 1.4;
+      setTimeout(() => { isPawing = false; pawScale = 1; }, 180);
+
+      creatures.forEach(c => {
+        if (!c.alive) return;
+        const dist = Math.hypot(c.x - x, c.y - y);
+        if (dist < c.size + 22) {
+          c.alive = false;
+          c.hitTimer = 25;
+          score += c.score;
+          spawnParticles(c.x, c.y, scoreColor(c.score));
+          setTimeout(() => spawnCreature(), 1200);
+        }
+      });
+    }
+
+    function scoreColor(s) {
+      if (s >= 50) return '#ff4444';
+      if (s >= 40) return '#ff9900';
+      if (s >= 30) return '#ffcc00';
+      return '#88ff88';
+    }
+
+    // --- Update ---
+    function updateCreatures(dt) {
+      creatures.forEach(c => {
+        if (!c.alive) { c.hitTimer--; return; }
+
+        switch (c.behavior) {
+          case 'random_fast':
+            if (Math.random() < c.dirRate) {
+              const a = Math.random() * Math.PI * 2;
+              c.vx = Math.cos(a) * c.speed;
+              c.vy = Math.sin(a) * c.speed;
+            }
+            break;
+          case 'slow_stop':
+            if (c.stopped) {
+              if (--c.stopTimer <= 0) c.stopped = false;
+            } else {
+              if (Math.random() < c.stopChance) {
+                c.stopped = true;
+                c.stopTimer = 60 + Math.random() * 120;
+              } else if (Math.random() < c.dirRate) {
+                const a = Math.random() * Math.PI * 2;
+                c.vx = Math.cos(a) * c.speed;
+                c.vy = Math.sin(a) * c.speed;
+              }
+            }
+            break;
+          case 'flee': {
+            const dx = c.x - pawX, dy = c.y - pawY;
+            const dist = Math.hypot(dx, dy);
+            if (dist < 110) {
+              c.vx = (dx / dist) * c.speed * 2.5;
+              c.vy = (dy / dist) * c.speed * 2.5;
+            } else {
+              c.vx *= 0.93; c.vy *= 0.93;
+            }
+            break;
+          }
+          case 'stationary':
+            return;
+        }
+
+        if (!c.stopped) {
+          c.x += c.vx;
+          c.y += c.vy;
+          if (c.x < 20)     { c.x = 20;     c.vx = Math.abs(c.vx); }
+          if (c.x > W - 20) { c.x = W - 20; c.vx = -Math.abs(c.vx); }
+          if (c.y < 20)     { c.y = 20;     c.vy = Math.abs(c.vy); }
+          if (c.y > H - 40) { c.y = H - 40; c.vy = -Math.abs(c.vy); }
+        }
+      });
+
+      creatures = creatures.filter(c => c.alive || c.hitTimer > 0);
+    }
+
+    function updateParticles() {
+      particles.forEach(p => {
+        p.x += p.vx; p.y += p.vy;
+        p.vy += 0.15;
+        p.life--;
+      });
+      particles = particles.filter(p => p.life > 0);
+    }
+
+    // --- Draw ---
+    function drawBackground() {
+      const grad = ctx.createLinearGradient(0, 0, 0, H);
+      grad.addColorStop(0, '#b3d9f2');
+      grad.addColorStop(0.7, '#c8e6c9');
+      grad.addColorStop(1, '#a5d6a7');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+
+      // Floor
+      ctx.fillStyle = '#795548';
+      ctx.fillRect(0, H - 28, W, 28);
+
+      // Simple window / picture on wall
+      ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(W - 130, 30, 100, 80);
+      ctx.strokeRect(W - 130, 30, 50, 40);
+      ctx.strokeRect(W - 80, 30, 50, 40);
+
+      // Baseboard
+      ctx.fillStyle = 'rgba(255,255,255,0.2)';
+      ctx.fillRect(0, H - 38, W, 10);
+    }
+
+    function drawCreatures() {
+      creatures.forEach(c => {
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        if (!c.alive) {
+          ctx.globalAlpha = c.hitTimer / 25;
+          ctx.font = '28px serif';
+          ctx.fillText('💥', c.x, c.y);
+        } else {
+          // Lizard: slight green tint overlay to suggest camouflage
+          if (c.type === 'lizard') ctx.globalAlpha = 0.7;
+          ctx.font = `${c.size}px serif`;
+          ctx.fillText(c.emoji, c.x, c.y);
+        }
+        ctx.restore();
+      });
+    }
+
+    function drawParticles() {
+      particles.forEach(p => {
+        ctx.save();
+        ctx.globalAlpha = p.life / p.maxLife;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * (p.life / p.maxLife), 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+    }
+
+    function drawLaser() {
+      const grad = ctx.createRadialGradient(laserX, laserY, 0, laserX, laserY, 18);
+      grad.addColorStop(0, 'rgba(255,80,80,1)');
+      grad.addColorStop(0.4, 'rgba(255,40,40,0.5)');
+      grad.addColorStop(1, 'rgba(255,0,0,0)');
+      ctx.save();
+      ctx.beginPath();
+      ctx.fillStyle = grad;
+      ctx.arc(laserX, laserY, 18, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.fillStyle = 'white';
+      ctx.arc(laserX, laserY, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawPawAt(x, y, scale, alpha) {
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.font = `${Math.round(44 * scale)}px serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🐾', x, y);
+      ctx.restore();
+    }
+
+    function drawPaw() {
+      // Shadow
+      if (isTouch) {
+        touchSwingAngle += 0.04;
+        shadowX = pawX + Math.cos(touchSwingAngle) * 36;
+        shadowY = pawY + Math.sin(touchSwingAngle) * 18;
+      } else {
+        shadowX = pawX - 14;
+        shadowY = pawY - 14;
+      }
+      drawPawAt(shadowX + 6, shadowY + 6, pawScale * 1.08, 0.25);
+      drawPawAt(pawX, pawY, pawScale, 1.0);
+    }
+
+    // Score popup
+    let scorePopups = [];
+    function doPawWithPopup(x, y) {
+      const before = score;
+      doPaw(x, y);
+      if (score > before) {
+        scorePopups.push({ x, y: y - 10, text: `+${score - before}`, life: 40 });
+      }
+    }
+
+    function drawScorePopups() {
+      scorePopups.forEach(p => {
+        ctx.save();
+        ctx.globalAlpha = p.life / 40;
+        ctx.fillStyle = '#ffd700';
+        ctx.font = 'bold 20px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(p.text, p.x, p.y);
+        ctx.restore();
+        p.y -= 1.2;
+        p.life--;
+      });
+      scorePopups = scorePopups.filter(p => p.life > 0);
+    }
+
+    // --- Loop ---
+    let lastTime = 0;
+    function gameLoop(ts) {
+      if (!gameRunning) return;
+      const dt = ts - lastTime || 16;
+      lastTime = ts;
+
+      ctx.clearRect(0, 0, W, H);
+      drawBackground();
+
+      updateCreatures(dt);
+      updateParticles();
+      drawCreatures();
+      drawParticles();
+      drawScorePopups();
+
+      if (mode === 2) {
+        drawLaser();
+        catPawTimer += dt;
+        if (catPawTimer >= catPawInterval) {
+          catPawTimer = 0;
+          catPawInterval = 1800 + Math.random() * 2500;
+          catPawActive = true;
+          catPawX = laserX; catPawY = laserY;
+          doPawWithPopup(laserX, laserY);
+          setTimeout(() => catPawActive = false, 280);
+        }
+        if (catPawActive) drawPawAt(catPawX, catPawY, 1.5, 0.85);
+      }
+
+      drawPaw();
+
+      document.getElementById('score-display').textContent = score;
+      document.getElementById('high-score-display').textContent = highScore;
+      document.getElementById('time-display').textContent = timedMode ? timeLeft + 's' : '∞';
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    // --- Title screen ---
+    drawBackground();
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = 'white';
+    ctx.textAlign = 'center';
+    ctx.font = 'bold 42px Arial';
+    ctx.fillText('🐱 Cat Paw Game', W / 2, H / 2 - 30);
+    ctx.font = '20px Arial';
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    ctx.fillText('Choose a mode and click Start!', W / 2, H / 2 + 20);
+    ctx.font = '15px Arial';
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.fillText('🪰 Fly=50pts  🐭 Mouse=40pts  🦋 Moth=30pts  🦎 Lizard=20pts', W / 2, H / 2 + 60);
+    ctx.textAlign = 'left';
+  </script>
+</body>
+</html>
