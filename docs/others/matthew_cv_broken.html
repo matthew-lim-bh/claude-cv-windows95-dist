@@ -1,0 +1,528 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Comic+Sans+MS&family=Papyrus&display=swap');
+
+  * { box-sizing: border-box; }
+
+  body-thing {
+    background: hotpink;
+  }
+
+  .broken-container {
+    background: linear-gradient(135deg, #ff00ff, #00ffff, #ffff00, #ff0000);
+    background-size: 400% 400%;
+    animation: rave 2s infinite;
+    padding: 20px;
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+    min-height: 800px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  @keyframes rave {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  .error-box {
+    background: #0000AA;
+    color: white;
+    padding: 12px;
+    margin: 10px 0;
+    font-family: monospace;
+    font-size: 13px;
+    border: 3px solid white;
+    animation: shake 0.5s infinite;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-3px) rotate(-1deg); }
+    75% { transform: translateX(3px) rotate(1deg); }
+  }
+
+  .cv-section {
+    background: white;
+    margin: 16px 0;
+    padding: 14px;
+    border: 5px dashed red;
+    position: relative;
+  }
+
+  .cv-section.upside-down {
+    transform: rotate(180deg);
+  }
+
+  .cv-section.sideways {
+    transform: rotate(-5deg);
+    margin-left: -10px;
+  }
+
+  .cv-section.too-big {
+    font-size: 22px;
+  }
+
+  .cv-section.too-small {
+    font-size: 9px;
+  }
+
+  .name-header {
+    font-size: 48px;
+    font-family: 'Papyrus', fantasy;
+    color: #ff0000;
+    text-shadow: 3px 3px 0px blue, 6px 6px 0px green;
+    animation: colorshift 0.3s infinite;
+    text-align: center;
+    margin: 0;
+  }
+
+  @keyframes colorshift {
+    0% { color: red; }
+    33% { color: lime; }
+    66% { color: blue; }
+    100% { color: red; }
+  }
+
+  .marquee-container {
+    background: black;
+    color: lime;
+    font-family: monospace;
+    font-size: 14px;
+    padding: 6px;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .marquee-inner {
+    display: inline-block;
+    animation: scroll-left 8s linear infinite;
+  }
+
+  @keyframes scroll-left {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+  }
+
+  .word-art {
+    font-size: 36px;
+    font-weight: 900;
+    background: linear-gradient(to right, violet, indigo, blue, green, yellow, orange, red);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-family: Impact, sans-serif;
+    text-align: center;
+  }
+
+  .under-construction {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: yellow;
+    border: 3px solid black;
+    padding: 6px 12px;
+    font-weight: bold;
+    font-size: 14px;
+    margin: 8px 0;
+    font-family: monospace;
+  }
+
+  .blink {
+    animation: blink 0.5s step-start infinite;
+  }
+
+  @keyframes blink {
+    50% { opacity: 0; }
+  }
+
+  .cursor {
+    display: inline-block;
+    width: 10px;
+    height: 16px;
+    background: black;
+    animation: blink 0.7s step-start infinite;
+    vertical-align: middle;
+  }
+
+  .skill-bar-wrong {
+    background: #ddd;
+    height: 20px;
+    margin: 4px 0;
+    border: 2px solid black;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .skill-fill-overflow {
+    height: 100%;
+    background: repeating-linear-gradient(45deg, red, red 10px, yellow 10px, yellow 20px);
+    animation: grow-infinite 1s ease-in-out infinite alternate;
+  }
+
+  @keyframes grow-infinite {
+    from { width: 95%; }
+    to { width: 115%; }
+  }
+
+  .skill-fill-tiny {
+    height: 100%;
+    background: blue;
+    width: 3%;
+  }
+
+  .missing-image {
+    width: 120px;
+    height: 120px;
+    border: 2px solid black;
+    background: #eee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: red;
+    font-family: monospace;
+    text-align: center;
+    float: right;
+    margin: 0 0 8px 12px;
+  }
+
+  .strike { text-decoration: line-through; }
+  .underline-everything { text-decoration: underline; color: blue; cursor: pointer; }
+
+  .visited-link { color: purple; text-decoration: underline; }
+
+  .popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  }
+
+  .popup {
+    background: #d4d0c8;
+    border: 2px solid;
+    border-color: white #808080 #808080 white;
+    padding: 0;
+    width: 340px;
+    font-family: 'MS Sans Serif', Arial, sans-serif;
+    font-size: 13px;
+    box-shadow: 2px 2px 0px black;
+  }
+
+  .popup-titlebar {
+    background: linear-gradient(to right, #000080, #1084d0);
+    color: white;
+    padding: 3px 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    font-weight: bold;
+  }
+
+  .popup-close {
+    background: #d4d0c8;
+    border: 1px solid;
+    border-color: white #808080 #808080 white;
+    width: 16px;
+    height: 14px;
+    font-size: 10px;
+    cursor: pointer;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .popup-body {
+    padding: 16px;
+    text-align: center;
+  }
+
+  .popup-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+  }
+
+  .popup-btn {
+    background: #d4d0c8;
+    border: 2px solid;
+    border-color: white #808080 #808080 white;
+    padding: 4px 20px;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: 'MS Sans Serif', Arial, sans-serif;
+    margin: 4px;
+  }
+
+  .popup-btn:active {
+    border-color: #808080 white white #808080;
+  }
+
+  .floating-text {
+    position: absolute;
+    font-size: 40px;
+    opacity: 0.15;
+    pointer-events: none;
+    font-family: Impact;
+    color: navy;
+    transform: rotate(-30deg);
+    top: 40%;
+    left: 20%;
+  }
+
+  .section-title {
+    font-size: 18px;
+    font-weight: bold;
+    font-family: 'Comic Sans MS', cursive;
+    color: #800080;
+    text-decoration: underline;
+    margin: 0 0 8px 0;
+  }
+
+  .tooltip-everywhere {
+    border-bottom: 2px dotted red;
+    cursor: help;
+    position: relative;
+  }
+
+  table.bad-table {
+    border-collapse: collapse;
+    font-size: 13px;
+    width: 110%;
+  }
+
+  table.bad-table td, table.bad-table th {
+    border: 3px solid lime;
+    background: #ffff99;
+    padding: 4px 8px;
+  }
+
+  .progress-lie {
+    font-size: 12px;
+    color: #555;
+    font-style: italic;
+  }
+
+  .achievement-badge {
+    display: inline-block;
+    background: gold;
+    border: 2px solid darkgoldenrod;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    text-align: center;
+    line-height: 60px;
+    font-size: 10px;
+    font-weight: bold;
+    margin: 4px;
+    animation: spin 3s linear infinite;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .hit-counter {
+    background: black;
+    color: lime;
+    font-family: monospace;
+    font-size: 14px;
+    padding: 4px 8px;
+    display: inline-block;
+    letter-spacing: 2px;
+  }
+
+  .scroll-to-top {
+    text-align: center;
+    font-size: 12px;
+    color: blue;
+    text-decoration: underline;
+    cursor: pointer;
+    font-family: monospace;
+    margin: 4px 0;
+  }
+
+  .page-divider {
+    height: 4px;
+    background: repeating-linear-gradient(to right, red 0px, red 10px, blue 10px, blue 20px, yellow 20px, yellow 30px, green 30px, green 40px);
+    margin: 8px 0;
+  }
+
+  .ie-warning {
+    background: #fffacd;
+    border: 1px solid #ccc;
+    padding: 8px;
+    font-size: 12px;
+    font-family: monospace;
+    color: #333;
+    margin: 8px 0;
+  }
+
+  .copyright-thing {
+    font-size: 11px;
+    color: #999;
+    text-align: center;
+    border-top: 1px solid #ccc;
+    padding-top: 8px;
+    font-family: monospace;
+  }
+</style>
+
+<h2 class="sr-only">Matthew's intentionally broken and chaotic CV page, presented for comedic effect.</h2>
+
+<div class="broken-container" id="main-container">
+
+  <div class="floating-text">HIRE ME</div>
+
+  <p class="name-header">MATTHEW</p>
+  <p style="text-align:center; font-family: 'Comic Sans MS', cursive; font-size: 14px; margin: 0;">
+    <span class="underline-everything">Energy Management Engineer</span> |
+    <span class="visited-link">Singapore</span> |
+    <span class="underline-everything">definitely@real-email.com</span>
+  </p>
+
+  <div class="marquee-container">
+    <span class="marquee-inner">*** WELCOME TO MY CV PAGE *** BEST VIEWED IN INTERNET EXPLORER 6 *** UPDATED: LAST TUESDAY *** VISITOR COUNT: 7 *** PLEASE SIGN MY GUESTBOOK *** THIS PAGE IS UNDER CONSTRUCTION ***</span>
+  </div>
+
+  <div class="under-construction">
+    <span style="font-size:20px;">🚧</span>
+    <span>UNDER CONSTRUCTION — Check back in 1997</span>
+    <span class="blink" style="font-size:20px;">🚧</span>
+  </div>
+
+  <div class="error-box">
+    ⚠ FATAL ERROR: professionalism.exe has stopped responding<br>
+    CV.html is not responding<br>
+    [Wait for the program to respond] [End Now] [Debug]<br><br>
+    <span class="blink">Press any key to continue... or don't. I'm a web page, not a cop.</span>
+  </div>
+
+  <div class="ie-warning">
+    ⚠ This page is optimised for Netscape Navigator 2.0 and a 640x480 screen resolution.
+    Some features may not work correctly in your browser (Internet Explorer 4 detected).
+  </div>
+
+  <div class="page-divider"></div>
+
+  <div class="cv-section">
+    <p class="section-title">ABOUT ME (this section left intentionally blank)</p>
+    <div class="missing-image">[Image loading...]<br><br>img_myphoto_<br>final_v3_<br>ACTUAL_<br>FINAL.jpg<br>(404)</div>
+    <p style="font-size:14px; font-family: 'Comic Sans MS', cursive;">
+      Hi!! My name is Matthew and I am a <span class="tooltip-everywhere" title="this is real I promise">very professional engineer</span>
+      who works with <span class="strike">robots</span> <span class="strike">electricity</span> <span class="strike">computers</span> energy management systems.
+    </p>
+    <p style="font-size:14px;">
+      I have <span class="word-art" style="font-size:20px; display:inline;">MANY YEARS</span> of experience and am
+      <span class="underline-everything">definitely available</span> for hire at a <span class="blink" style="color:red; font-size:18px;">VERY REASONABLE SALARY</span>.
+    </p>
+    <p style="font-family: monospace; font-size: 12px; color: #555;">Last updated: sometime. Browser: ???. IP address: we know it. <span class="cursor"></span></p>
+  </div>
+
+  <div class="cv-section sideways">
+    <p class="section-title">SKILLS (rated by my mum)</p>
+    <p style="font-size:13px;">Python</p>
+    <div class="skill-bar-wrong"><div class="skill-fill-overflow"></div></div>
+    <p class="progress-lie">999% — cannot be contained</p>
+
+    <p style="font-size:13px;">Microsoft Word</p>
+    <div class="skill-bar-wrong"><div class="skill-fill-tiny"></div></div>
+    <p class="progress-lie">3% — have opened it</p>
+
+    <p style="font-size:13px;">Energy Management Systems</p>
+    <div class="skill-bar-wrong"><div class="skill-fill-overflow"></div></div>
+    <p class="progress-lie">over 9000% — send help</p>
+
+    <p style="font-size:13px;">CSS</p>
+    <div class="skill-bar-wrong" style="transform: rotate(3deg);"><div style="height:100%; background: hotpink; width: 50%;"></div></div>
+    <p class="progress-lie">50% — as evidenced by this page</p>
+  </div>
+
+  <div class="page-divider"></div>
+
+  <div class="cv-section too-small">
+    <p class="section-title" style="font-size: 9px !important;">EXPERIENCE (the important stuff)</p>
+    <table class="bad-table">
+      <tr><th>Role</th><th>Company</th><th>Duration</th><th>Achievement</th></tr>
+      <tr><td>Engineer</td><td>[REDACTED]</td><td>Ages</td><td>Kept the lights on</td></tr>
+      <tr><td>Senior Engineer</td><td>[REDACTED]</td><td>Also ages</td><td>Kept MORE lights on</td></tr>
+      <tr><td>Very Senior Engineer</td><td>TBD</td><td>Soon™</td><td>???</td></tr>
+    </table>
+  </div>
+
+  <div class="cv-section upside-down">
+    <p class="section-title">EDUCATION (don't read upside down)</p>
+    <p style="font-size:14px;">🎓 Degree in Something Technical — Some University — Some Year</p>
+    <p style="font-size:14px;">📜 Certifications: <span class="blink">Loading...</span></p>
+    <p style="font-size:10px; color: gray; font-family: monospace;">(if you're reading this, congratulations on your neck)</p>
+  </div>
+
+  <div class="page-divider"></div>
+
+  <div class="cv-section">
+    <p class="section-title">AWARDS & ACHIEVEMENTS</p>
+    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+      <div class="achievement-badge">Best<br>CV</div>
+      <div class="achievement-badge" style="animation-direction: reverse;">Most<br>HTML</div>
+      <div class="achievement-badge" style="animation-duration: 1s;">Kept<br>Lights<br>On</div>
+      <div class="achievement-badge" style="background: silver;">Showed<br>Up</div>
+    </div>
+  </div>
+
+  <div class="cv-section too-big">
+    <p class="section-title">CONTACT ME</p>
+    <p>Email: <span class="underline-everything">matthew@<span class="blink">████</span>.com</span></p>
+    <p>LinkedIn: <span class="visited-link">definitely-real-linkedin-url</span></p>
+    <p>GitHub: <span class="underline-everything">github.com/mXXXXXXX</span></p>
+    <p style="font-size:14px; font-family: monospace;">Response time: <span class="blink" style="color:green;">●</span> ONLINE (probably)</p>
+  </div>
+
+  <div style="text-align: center; margin: 12px 0;">
+    <span style="font-size:12px; font-family: monospace;">You are visitor number: </span>
+    <span class="hit-counter" id="counter">0000007</span>
+  </div>
+
+  <div class="scroll-to-top" onclick="window.scrollTo(0,0)">[ back to top ] [ back to top ] [ back to top ]</div>
+
+  <div class="copyright-thing">
+    © 1997–2026 Matthew. All rights reserved. Do not hotlink my images.<br>
+    Best viewed at 800×600. This page was made with ❤ and Notepad.<br>
+    <span class="blink">★★★ Please sign my guestbook! ★★★</span>
+  </div>
+
+</div>
+
+<div class="popup-overlay" id="popup" style="display:none;">
+  <div class="popup">
+    <div class="popup-titlebar">
+      <span>CONGRATULATIONS!!!</span>
+      <button class="popup-close" onclick="document.getElementById('popup').style.display='none'">✕</button>
+    </div>
+    <div class="popup-body">
+      <div class="popup-icon">🏆</div>
+      <p style="font-size:13px; margin: 0 0 8px;">You are the <strong>1,000,000th visitor</strong> to this CV!<br><br>You have won a <em>free internship offer</em> and a chance to work with Matthew on exciting energy management systems!</p>
+      <div>
+        <button class="popup-btn" onclick="document.getElementById('popup').style.display='none'">YES PLEASE</button>
+        <button class="popup-btn" onclick="document.getElementById('popup').style.display='none'">ALSO YES</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  setTimeout(() => {
+    document.getElementById('popup').style.display = 'flex';
+  }, 2500);
+
+  let count = 7;
+  setInterval(() => {
+    count++;
+    document.getElementById('counter').textContent = String(count).padStart(7, '0');
+  }, 1800);
+</script>
