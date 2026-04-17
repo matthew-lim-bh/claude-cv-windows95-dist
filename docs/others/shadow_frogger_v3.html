@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shadow Frogger v3</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#1a1a1a;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:monospace}
+#wrap{position:relative;width:480px;max-width:100%}
+canvas{display:block;width:100%;cursor:none}
+#hud{position:absolute;top:6px;left:10px;font-size:12px;color:#fff;text-shadow:0 1px 3px #000b;pointer-events:none}
+#msg{position:absolute;top:40%;left:50%;transform:translate(-50%,-50%);text-align:center;color:#fff;background:rgba(0,0,0,.65);padding:14px 22px;border-radius:10px;font-size:14px;line-height:1.8;pointer-events:none;display:none;min-width:240px}
+</style>
+</head>
+<body>
+<div id="wrap">
+<canvas id="c"></canvas>
+<div id="hud"><span id="sc">score: 0</span> &nbsp; <span id="lv">level: 1</span> &nbsp; <span id="li">❤️❤️❤️</span></div>
+<div id="msg"></div>
+</div>
+<script>
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+const msgEl=document.getElementById('msg');
+const scEl=document.getElementById('sc'),lvEl=document.getElementById('lv'),liEl=document.getElementById('li');
+
+const W=480,H=540;
+cv.width=W;cv.height=H;
+
+const BRIDGE_H=75;
+const BRIDGE_Y=H-BRIDGE_H;
+const ROAD_H=BRIDGE_Y;
+const ROAD_Y=0;
+const SAFE_W=44;
+const LANE_AREA_W=W-SAFE_W*2;
+const NUM_LANES=6;
+const LANE_W=LANE_AREA_W/NUM_LANES;
+const MEDIAN_X=W/2;
+
+let px=W-SAFE_W/2;
+const PW=18,PH=30;
+const PLAYER_Y=BRIDGE_Y+BRIDGE_H/2-4;
+
+let sx,sy;
+const SHAD_W=22,SHAD_H=13;
+
+let score=0,lives=3,level=1;
+let state='start';
+let hitTimer=0;const HIT_DUR=85;
+let hitShake=0;
+let cars=[];
+
+function laneX(i){return SAFE_W+i*LANE_W+LANE_W/2;}
+
+function initLevel(){
+  cars=[];
+  const base=1.1+(level-1)*0.25;
+  for(let i=0;i<NUM_LANES;i++){
+    const dir=i<NUM_LANES/2?1:-1;
+    const speedBoost=(i/(NUM_LANES-1))*0.5;
+    const spd=(base+Math.random()*0.7+speedBoost)*dir;
+    const count=2+Math.floor(Math.random()*2);
+    const gap=ROAD_H/count;
+    const cw=LANE_W*0.72;
+    const ch=36+Math.random()*18;
+    for(let j=0;j<count;j++){
+      const startY=dir>0
+        ?ROAD_Y+j*gap+Math.random()*gap*0.3
+        :ROAD_Y+ROAD_H-j*gap-ch-Math.random()*gap*0.3;
+      cars.push({li:i,y:startY,w:cw,h:ch,spd,col:carCol(i)});
+    }
+  }
+  px=W-SAFE_W/2;sy=ROAD_H/2;sx=px;
+}
+
+function carCol(i){return['#c0392b','#2980b9','#27ae60','#e67e22','#8e44ad','#16a085'][i%6];}
+
+const STEP=LANE_W,VSTEP=16;
+
+document.addEventListener('keydown',e=>{
+  if(state==='start'){state='play';hideMsg();return;}
+  if(state==='dead'||state==='win'){advanceState();return;}
+  if(state!=='play')return;
+  if(e.key==='ArrowLeft'||e.key==='a'){px-=STEP;e.preventDefault();}
+  if(e.key==='ArrowRight'||e.key==='d'){px+=STEP;e.preventDefault();}
+  if(e.key==='ArrowUp'||e.key==='w'){sy-=VSTEP;e.preventDefault();}
+  if(e.key==='ArrowDown'||e.key==='s'){sy+=VSTEP;e.preventDefault();}
+  clamp();checkWin();
+});
+
+let tSX,tSY;
+cv.addEventListener('touchstart',e=>{tSX=e.touches[0].clientX;tSY=e.touches[0].clientY;e.preventDefault();},{passive:false});
+cv.addEventListener('touchend',e=>{
+  if(state==='start'){state='play';hideMsg();return;}
+  if(state==='dead'||state==='win'){advanceState();return;}
+  if(state!=='play')return;
+  const dx=e.changedTouches[0].clientX-tSX;
+  const dy=e.changedTouches[0].clientY-tSY;
+  if(Math.abs(dx)>Math.abs(dy)){px+=dx>0?STEP:-STEP;}
+  else{sy+=dy>0?VSTEP:-VSTEP;}
+  clamp();checkWin();e.preventDefault();
+},{passive:false});
+
+function clamp(){
+  px=Math.max(8,Math.min(W-8,px));
+  sx=px;
+  sy=Math.max(4,Math.min(ROAD_H-4,sy));
+}
+
+function checkWin(){
+  if(px<=SAFE_W+8){
+    score+=100*level;state='win';
+    showMsg(`🎉 Road crossed!<br>+${100*level} pts<br><small>any key / tap to continue</small>`);
+  }
+}
+
+function advanceState(){
+  if(state==='dead'){score=0;lives=3;level=1;}
+  else{level++;}
+  state='play';hideMsg();initLevel();
+}
+
+function overlaps(ax,ay,aw,ah,bx,by,bw,bh){
+  return ax<bx+bw&&ax+aw>bx&&ay<by+bh&&ay+ah>by;
+}
+
+function checkHit(){
+  if(sx>W-SAFE_W||sx<SAFE_W)return;
+  for(const c of cars){
+    const cx=laneX(c.li)-c.w/2;
+    if(overlaps(sx-SHAD_W/2,sy-SHAD_H/2,SHAD_W,SHAD_H,cx,c.y,c.w,c.h)){doHit();return;}
+  }
+}
+
+function doHit(){
+  if(state!=='play')return;
+  lives--;state='hit';hitTimer=HIT_DUR;hitShake=20;
+  const delay=(HIT_DUR/60)*1000+350;
+  if(lives<=0){
+    setTimeout(()=>{state='dead';showMsg(`💥 Game over!<br>Score: ${score}<br><small>any key / tap to restart</small>`);},delay);
+  } else {
+    setTimeout(()=>{px=W-SAFE_W/2;sx=px;sy=ROAD_H/2;state='play';},delay);
+  }
+}
+
+function update(){
+  const moving=state==='play'||state==='hit';
+  if(!moving)return;
+  const slowdown=state==='hit'?0.35:1;
+  cars.forEach(c=>{
+    c.y+=c.spd*slowdown;
+    if(c.spd>0&&c.y>ROAD_H)c.y=-c.h;
+    if(c.spd<0&&c.y+c.h<0)c.y=ROAD_H;
+  });
+  if(state==='play')checkHit();
+  if(state==='hit'){hitTimer--;if(hitShake>0)hitShake--;}
+}
+
+function drawRoad(){
+  ctx.fillStyle='#2a2a2a';ctx.fillRect(0,ROAD_Y,W,ROAD_H);
+  ctx.save();ctx.strokeStyle='#ffffff20';ctx.lineWidth=1;ctx.setLineDash([10,10]);
+  for(let i=1;i<NUM_LANES;i++){
+    const x=SAFE_W+i*LANE_W;
+    ctx.beginPath();ctx.moveTo(x,ROAD_Y);ctx.lineTo(x,ROAD_H);ctx.stroke();
+  }
+  ctx.setLineDash([]);ctx.restore();
+  ctx.strokeStyle='#f1c40f';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(MEDIAN_X-3,ROAD_Y);ctx.lineTo(MEDIAN_X-3,ROAD_H);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(MEDIAN_X+3,ROAD_Y);ctx.lineTo(MEDIAN_X+3,ROAD_H);ctx.stroke();
+  ctx.fillStyle='#2980b944';ctx.fillRect(0,ROAD_Y,SAFE_W,ROAD_H);
+  ctx.fillStyle='#27ae6044';ctx.fillRect(W-SAFE_W,ROAD_Y,SAFE_W,ROAD_H);
+  ctx.fillStyle='#ffffff15';ctx.font='13px monospace';ctx.textAlign='center';
+  for(let i=0;i<NUM_LANES;i++){ctx.fillText(i<NUM_LANES/2?'↓':'↑',laneX(i),ROAD_H/2);}
+  ctx.font='9px monospace';
+  ctx.save();ctx.fillStyle='#7ec8f0';ctx.translate(SAFE_W/2,ROAD_H/2);ctx.rotate(-Math.PI/2);ctx.fillText('◄ GOAL',0,4);ctx.restore();
+  ctx.save();ctx.fillStyle='#a8ffc0';ctx.translate(W-SAFE_W/2,ROAD_H/2);ctx.rotate(-Math.PI/2);ctx.fillText('START',0,4);ctx.restore();
+}
+
+function drawCars(){
+  cars.forEach(c=>{
+    const cx=laneX(c.li)-c.w/2;
+    ctx.fillStyle=c.col;rrect(cx,c.y,c.w,c.h,4);ctx.fill();
+    ctx.fillStyle='#ffffffaa';
+    const wh=c.h*0.32,wy=c.spd>0?c.y+3:c.y+c.h-3-wh;
+    rrect(cx+c.w*0.18,wy,c.w*0.64,wh,2);ctx.fill();
+    ctx.fillStyle='#111';
+    [[cx+3,c.y+4],[cx+c.w-7,c.y+4],[cx+3,c.y+c.h-8],[cx+c.w-7,c.y+c.h-8]].forEach(([wx,wy2])=>{
+      ctx.beginPath();ctx.ellipse(wx+2,wy2+2,4,3,0,0,Math.PI*2);ctx.fill();
+    });
+    ctx.fillStyle=c.spd>0?'#ff444488':'#ffe97788';
+    ctx.fillRect(cx+3,c.spd>0?c.y+c.h-5:c.y,c.w-6,4);
+  });
+}
+
+function drawShadow(){
+  if(state==='hit')return;
+  const inSafe=sx>W-SAFE_W||sx<SAFE_W;
+  ctx.save();ctx.globalAlpha=inSafe?0.35:0.88;
+  ctx.fillStyle='#00000099';ctx.beginPath();ctx.ellipse(sx,sy,SHAD_W,SHAD_H*0.5,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#000000bb';ctx.beginPath();ctx.ellipse(sx,sy+2,SHAD_W*0.33,SHAD_H*0.4,0,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+}
+
+function drawBridge(){
+  const g=ctx.createLinearGradient(0,BRIDGE_Y,0,H);
+  g.addColorStop(0,'#5a5248');g.addColorStop(1,'#7a7060');
+  ctx.fillStyle=g;ctx.fillRect(0,BRIDGE_Y,W,BRIDGE_H);
+  ctx.fillStyle='#3d3530';ctx.fillRect(0,BRIDGE_Y,W,7);
+  ctx.fillStyle='#9e9080';ctx.fillRect(0,BRIDGE_Y+7,W,BRIDGE_H-18);
+  ctx.fillStyle='#3d3530';
+  for(let x=18;x<W;x+=30){ctx.fillRect(x,BRIDGE_Y+2,4,18);}
+  ctx.fillStyle='#2a2520';ctx.fillRect(0,BRIDGE_Y+2,W,5);
+  ctx.fillStyle='#3d3530';ctx.fillRect(0,H-10,W,10);
+  ctx.fillStyle='#ffffff44';ctx.font='9px monospace';ctx.textAlign='left';
+  ctx.fillText('OVERHEAD BRIDGE',10,H-14);
+  const dg=ctx.createLinearGradient(W*0.5,0,W,0);
+  dg.addColorStop(0,'rgba(0,0,0,0)');dg.addColorStop(1,'rgba(0,0,0,0.18)');
+  ctx.fillStyle=dg;ctx.fillRect(0,ROAD_Y,W,ROAD_H);
+}
+
+function drawPlayer(){
+  const shake=hitShake>0?(Math.random()-.5)*hitShake*0.9:0;
+  const bpx=px+shake;
+  const bpy=PLAYER_Y+(hitShake>0?(Math.random()-.5)*hitShake*0.4:0);
+  ctx.save();ctx.strokeStyle='#00000035';ctx.lineWidth=1;ctx.setLineDash([5,6]);
+  ctx.beginPath();ctx.moveTo(bpx,bpy-PH/2);ctx.lineTo(sx,sy);ctx.stroke();ctx.setLineDash([]);ctx.restore();
+  ctx.fillStyle='#e74c3c';rrect(bpx-PW/2,bpy-PH/2,PW,PH,3);ctx.fill();
+  ctx.fillStyle='#f0d9b5';ctx.beginPath();ctx.ellipse(bpx,bpy-PH/2-9,8,9,0,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#e74c3c';ctx.lineWidth=3;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(bpx-PW/2,bpy-8);ctx.lineTo(bpx-PW/2-11,bpy-18);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(bpx+PW/2,bpy-8);ctx.lineTo(bpx+PW/2+11,bpy-18);ctx.stroke();
+}
+
+function drawHitOverlay(){
+  const t=1-hitTimer/HIT_DUR;
+  ctx.fillStyle=`rgba(200,20,20,${Math.max(0,0.45-t*0.45)})`;ctx.fillRect(0,0,W,H);
+  const a=Math.min(1,t*3)*Math.max(0,1-(t-0.4)*3);
+  if(a>0){ctx.save();ctx.globalAlpha=a;ctx.fillStyle='#fff';ctx.font='bold 42px monospace';ctx.textAlign='center';ctx.fillText('HIT!',W/2,H/2-20);ctx.restore();}
+  ctx.save();ctx.globalAlpha=Math.min(1,t*3);ctx.fillStyle='#c0392b';
+  for(let i=0;i<8;i++){
+    const ang=(i/8)*Math.PI*2,r=5+t*18;
+    ctx.beginPath();ctx.ellipse(px+Math.cos(ang)*r,PLAYER_Y+Math.sin(ang)*r*0.55,3+t*3,2.5,ang,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+}
+
+function rrect(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+}
+
+function showMsg(t){msgEl.innerHTML=t;msgEl.style.display='block';}
+function hideMsg(){msgEl.style.display='none';}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  drawRoad();drawCars();drawShadow();drawBridge();drawPlayer();
+  if(state==='hit')drawHitOverlay();
+  scEl.textContent='score: '+score;
+  lvEl.textContent='level: '+level;
+  liEl.textContent='❤️'.repeat(Math.max(0,lives));
+}
+
+function loop(){update();draw();requestAnimationFrame(loop);}
+
+showMsg('🌉 Shadow Frogger v3<br><small>You stand on the bridge below.<br>Guide your shadow across the road above.<br><br>← → move across lanes<br>↑ ↓ nudge within lane<br>Swipe on mobile<br><br>Left lanes: easier (full view)<br>Right lanes: harder (bridge blocks view)<br><br>tap / press any key to start</small>');
+initLevel();
+loop();
+</script>
+</body>
+</html>
